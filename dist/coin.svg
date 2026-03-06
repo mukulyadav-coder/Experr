@@ -1,0 +1,37 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFE500;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer shadow circle -->
+  <circle cx="100" cy="100" r="100" fill="#CC7700" opacity="0.6"/>
+  
+  <!-- Main coin -->
+  <circle cx="100" cy="100" r="95" fill="url(#goldGradient)" stroke="#FF9500" stroke-width="2"/>
+  
+  <!-- Inner circle for depth -->
+  <circle cx="100" cy="100" r="85" fill="url(#goldGradient)" opacity="0.95"/>
+  
+  <!-- Top shine -->
+  <ellipse cx="100" cy="40" rx="45" ry="35" fill="#FFFF99" opacity="0.6"/>
+  <ellipse cx="100" cy="35" rx="30" ry="20" fill="white" opacity="0.7"/>
+  
+  <!-- Dollar sign - clean and clear -->
+  <g>
+    <text x="100" y="115" 
+          font-family="Arial, sans-serif" 
+          font-size="100" 
+          font-weight="900" 
+          text-anchor="middle" 
+          fill="#FF8800"
+          stroke="#CC6600"
+          stroke-width="1">$</text>
+  </g>
+  
+  <!-- Bottom shine -->
+  <ellipse cx="100" cy="160" rx="40" ry="20" fill="white" opacity="0.3"/>
+</svg>
