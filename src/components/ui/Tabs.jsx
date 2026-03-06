@@ -1,30 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { cn } from '../../utils/utils';
 
-export function Tabs({ tabs, defaultTab, onChange, className }) {
-    const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id);
+const TabsContext = createContext();
 
-    const handleTabClick = (tabId) => {
-        setActiveTab(tabId);
-        if (onChange) onChange(tabId);
+export function Tabs({ value, onValueChange, className, children }) {
+    const [activeTab, setActiveTab] = useState(value);
+
+    const handleValueChange = (newValue) => {
+        setActiveTab(newValue);
+        if (onValueChange) onValueChange(newValue);
     };
 
     return (
-        <div className={cn("flex space-x-1 rounded-lg bg-gray-100 p-1 dark:bg-dark-800", className)}>
-            {tabs.map((tab) => (
-                <button
-                    key={tab.id}
-                    onClick={() => handleTabClick(tab.id)}
-                    className={cn(
-                        "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                        activeTab === tab.id
-                            ? "bg-white text-gray-900 shadow-sm dark:bg-dark-700 dark:text-white"
-                            : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    )}
-                >
-                    {tab.label}
-                </button>
-            ))}
+        <TabsContext.Provider value={{ activeTab, onValueChange: handleValueChange }}>
+            <div className={cn("", className)}>
+                {children}
+            </div>
+        </TabsContext.Provider>
+    );
+}
+
+export function TabsList({ className, children }) {
+    return (
+        <div className={cn("inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground gap-1", className)}>
+            {children}
+        </div>
+    );
+}
+
+export function TabsTrigger({ value, className, children }) {
+    const { activeTab, onValueChange } = useContext(TabsContext);
+
+    return (
+        <button
+            onClick={() => onValueChange(value)}
+            className={cn(
+                "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 relative",
+                activeTab === value
+                    ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#7c3aed] after:rounded-full"
+                    : "hover:bg-[#7c3aed] hover:text-white text-muted-foreground rounded-md",
+                className
+            )}
+        >
+            {children}
+        </button>
+    );
+}
+
+export function TabsContent({ value, className, children }) {
+    const { activeTab } = useContext(TabsContext);
+
+    if (activeTab !== value) return null;
+
+    return (
+        <div className={cn("mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", className)}>
+            {children}
         </div>
     );
 }

@@ -7,6 +7,7 @@ import { MarketingLayout } from './components/layout/MarketingLayout';
 
 // Pages placeholders (will replace with real imports)
 import Landing from './pages/Landing';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import TaskSimulation from './pages/TaskSimulation';
@@ -33,6 +34,7 @@ function App() {
                 {/* Marketing Routes */}
                 <Route element={<MarketingLayout toggleTheme={toggleTheme} isDark={darkMode} />}>
                     <Route path="/" element={<Landing />} />
+                    <Route path="/auth" element={<Auth />} />
                 </Route>
 
                 {/* App Routes */}

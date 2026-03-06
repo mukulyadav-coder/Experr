@@ -22,7 +22,7 @@ export default function Landing() {
                         Simulate real workplace environments, tackle professional coding scenarios, and build a pre-verified transcript of your actual capabilities.
                     </p>
                     <div className="mt-10 flex gap-4">
-                        <Button size="lg" className="h-14 px-8 text-lg font-semibold group rounded-full" onClick={() => window.location.href = '/dashboard'}>
+                        <Button size="lg" className="h-14 px-8 text-lg font-semibold group rounded-full" onClick={() => window.location.href = '/auth'}>
                             Start Simulation
                             <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                         </Button>
@@ -158,7 +158,7 @@ export default function Landing() {
                     <p className="text-xl text-black mb-10 max-w-2xl mx-auto">
                         Join thousands of students who are skipping the whiteboard interviews by demonstrating real engineering competence.
                     </p>
-                    <Button size="lg" className="h-14 px-10 text-lg font-bold bg-white text-experr-700 hover:bg-gray-50 rounded-full shadow-xl" onClick={() => window.location.href = '/dashboard'}>
+                    <Button size="lg" className="h-14 px-10 text-lg font-bold bg-white text-experr-700 hover:bg-gray-50 rounded-full shadow-xl" onClick={() => window.location.href = '/auth'}>
                         Start Your First Simulation
                     </Button>
                 </div>

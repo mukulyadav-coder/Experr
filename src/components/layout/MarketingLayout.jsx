@@ -20,7 +20,7 @@ export function MarketingLayout({ toggleTheme, isDark }) {
 
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" onClick={toggleTheme}>Theme</Button>
-                        <Link to="/dashboard">
+                        <Link to="/auth">
                             <Button>Dashboard</Button>
                         </Link>
                     </div>
