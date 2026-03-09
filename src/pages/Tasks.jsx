@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Search, Filter, Clock, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
-import { mockTasks } from '../data/mockData';
+import { supabase } from '../../lib/supabase';
 
 export default function Tasks() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -13,15 +13,36 @@ export default function Tasks() {
     const [difficultyFilter, setDifficultyFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
     const [sortBy, setSortBy] = useState('deadline');
+    const [tasks, setTasks] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('tasks')
+                    .select('*');
+                if (error) throw error;
+                setTasks(data || []);
+            } catch (err) {
+                console.error(err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTasks();
+    }, []);
 
     // Get unique roles from tasks
-    const roles = ['all', ...new Set(mockTasks.map(t => t.role))];
+    const roles = ['all', ...new Set(tasks.map(t => t.role))];
     const difficulties = ['all', 'Easy', 'Medium', 'Hard'];
     const statuses = ['all', 'todo', 'in-progress', 'completed'];
 
     // Filter and sort tasks
     const filteredTasks = useMemo(() => {
-        let result = mockTasks.filter(task => {
+        let result = tasks.filter(task => {
             const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 task.role.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesRole = roleFilter === 'all' || task.role === roleFilter;
@@ -47,7 +68,7 @@ export default function Tasks() {
         });
 
         return result;
-    }, [searchQuery, roleFilter, difficultyFilter, statusFilter, sortBy]);
+    }, [tasks, searchQuery, roleFilter, difficultyFilter, statusFilter, sortBy]);
 
     const getStatusIcon = (status) => {
         switch (status) {
@@ -92,6 +113,14 @@ export default function Tasks() {
         return new Date(deadline) < new Date() && formatDate(deadline) !== 'Today';
     };
 
+    if (loading) {
+        return <div className="flex justify-center items-center h-64">Loading tasks...</div>;
+    }
+
+    if (error) {
+        return <div className="flex justify-center items-center h-64 text-red-500">Error: {error}</div>;
+    }
+
     return (
         <div className="flex flex-col gap-8 pb-10">
             {/* Header */}
@@ -100,7 +129,7 @@ export default function Tasks() {
                     My Tasks
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 mt-2">
-                    {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'} · {mockTasks.filter(t => t.status === 'completed').length} completed
+                    {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'} · {tasks.filter(t => t.status === 'completed').length} completed
                 </p>
             </div>
 
@@ -284,12 +313,12 @@ export default function Tasks() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardDescription>Tasks Completed</CardDescription>
-                        <CardTitle className="text-2xl">{mockTasks.filter(t => t.status === 'completed').length}/{mockTasks.length}</CardTitle>
+                        <CardTitle className="text-2xl">{tasks.filter(t => t.status === 'completed').length}/{tasks.length}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <ProgressBar value={mockTasks.filter(t => t.status === 'completed').length} max={mockTasks.length} />
+                        <ProgressBar value={tasks.filter(t => t.status === 'completed').length} max={tasks.length} />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            {Math.round((mockTasks.filter(t => t.status === 'completed').length / mockTasks.length) * 100)}% completion rate
+                            {Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100)}% completion rate
                         </p>
                     </CardContent>
                 </Card>
@@ -297,11 +326,11 @@ export default function Tasks() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardDescription>In Progress</CardDescription>
-                        <CardTitle className="text-2xl">{mockTasks.filter(t => t.status === 'in-progress').length}</CardTitle>
+                        <CardTitle className="text-2xl">{tasks.filter(t => t.status === 'in-progress').length}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-xs text-amber-500 font-medium">
-                            {mockTasks.filter(t => t.status === 'in-progress' && isOverdue(t.deadline)).length} overdue
+                            {tasks.filter(t => t.status === 'in-progress' && isOverdue(t.deadline)).length} overdue
                         </p>
                     </CardContent>
                 </Card>
@@ -309,7 +338,7 @@ export default function Tasks() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardDescription>Not Started</CardDescription>
-                        <CardTitle className="text-2xl">{mockTasks.filter(t => t.status === 'todo').length}</CardTitle>
+                        <CardTitle className="text-2xl">{tasks.filter(t => t.status === 'todo').length}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-xs text-gray-500 dark:text-gray-400">

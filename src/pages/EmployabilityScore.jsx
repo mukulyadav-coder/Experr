@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Share2, Lock, Award, ShieldCheck, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Badge } from '../components/ui/Badge';
-import { userProfile } from '../data/mockData';
+import { supabase } from '../../lib/supabase';
 
 export default function EmployabilityScore() {
     return (
@@ -36,12 +36,12 @@ export default function EmployabilityScore() {
                                     strokeWidth="8"
                                     className="text-experr-500 stroke-current"
                                     strokeDasharray="289"
-                                    strokeDashoffset={289 - (289 * userProfile.employabilityScore) / 100}
+                                    strokeDashoffset={289 - (289 * 85) / 100}
                                     strokeLinecap="round"
                                 />
                             </svg>
                             <div className="flex flex-col items-center">
-                                <span className="text-5xl font-extrabold text-gray-900 dark:text-white">{userProfile.employabilityScore}</span>
+                                <span className="text-5xl font-extrabold text-gray-900 dark:text-white">{85}</span>
                                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">/ 100</span>
                             </div>
                         </div>

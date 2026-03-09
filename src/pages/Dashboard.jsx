@@ -1,24 +1,95 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Clock, CheckCircle2, AlertCircle, ArrowRight, MessageSquare, PlayCircle, Code, Briefcase } from 'lucide-react';
-import { userProfile, currentSimulation, upcomingDeadlines, activityFeed, mockSubmissions } from '../data/mockData';
+import { supabase } from '../../lib/supabase';
 
 export default function Dashboard() {
+    const [profile, setProfile] = useState(null);
+    const [submissions, setSubmissions] = useState([]);
+    const [currentTask, setCurrentTask] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    // Fallback/fake data for missing variables
+    const currentSimulation = currentTask ? {
+        title: currentTask.title,
+        company: currentTask.company,
+        role: currentTask.role,
+        progress: 50 // Example progress
+    } : { title: 'No Task', company: '', role: '', progress: 0 };
+    const upcomingDeadlines = [];
+    const activityFeed = [];
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) throw new Error('Not authenticated');
+
+                // Fetch profile
+                const { data: profileData, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('name, coins')
+                    .eq('id', user.id)
+                    .single();
+                if (profileError) throw profileError;
+                setProfile(profileData);
+
+                // Fetch submissions with task info (Supabase join)
+                const { data: submissionsData, error: submissionsError } = await supabase
+                    .from('submissions')
+                    .select('*, tasks(*)')
+                    .eq('user_id', user.id);
+                if (submissionsError) throw submissionsError;
+                setSubmissions(submissionsData || []);
+
+                // Fetch a current task, e.g., first task
+                const { data: taskData, error: taskError } = await supabase
+                    .from('tasks')
+                    .select('*')
+                    .limit(1)
+                    .single();
+                if (taskError) throw taskError;
+                setCurrentTask(taskData);
+            } catch (err) {
+                console.error(err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return <div className="flex justify-center items-center h-64">Loading dashboard...</div>;
+    }
+
+    if (error) {
+        return <div className="flex justify-center items-center h-64 text-red-500">Error: {error}</div>;
+    }
+
+    const stats = {
+        employabilityScore: 85, // Hardcoded for now
+        completedTasks: submissions.filter(s => s.status === 'approved').length,
+        feedbackReceived: submissions.filter(s => s.status === 'approved').length, // Assuming feedback per approved
+        totalCoins: submissions.filter(s => s.status === 'approved').reduce((sum, s) => sum + (s.coins || 0), 0),
+    };
+
     return (
         <div className="flex flex-col gap-8 pb-10">
             {/* Welcome Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        Welcome back, {userProfile.name.split(' ')[0]}
+                        Welcome back, {profile?.name?.split(' ')[0]}
                     </h1>
                     <p className="text-gray-500 dark:text-gray-400 mt-1">Here's a summary of your workspace today.</p>
                 </div>
-                <Link to={`/tasks/${currentSimulation.id}`}>
+                <Link to={`/tasks/${currentTask?.id}`}>
                     <Button className="shrink-0 gap-2">
                         <PlayCircle className="h-4 w-4" />
                         Resume Simulation
@@ -29,9 +100,9 @@ export default function Dashboard() {
             {/* Overview Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                    { label: 'Employability Score', value: `${userProfile.employabilityScore}/100`, trend: '+2 points this week', color: 'text-experr-600' },
-                    { label: 'Completed Tasks', value: userProfile.completedTasks, trend: 'Top 15% of cohort', color: 'text-green-600' },
-                    { label: 'Feedback Received', value: userProfile.feedbackReceived, trend: '2 new since last login', color: 'text-purple-600' },
+                    { label: 'Employability Score', value: `${stats.employabilityScore}/100`, trend: '+2 points this week', color: 'text-experr-600' },
+                    { label: 'Completed Tasks', value: stats.completedTasks, trend: 'Top 15% of cohort', color: 'text-green-600' },
+                    { label: 'Feedback Received', value: stats.feedbackReceived, trend: '2 new since last login', color: 'text-purple-600' },
                 ].map((stat, i) => (
                     <Card key={i}>
                         <CardHeader className="pb-2">
@@ -167,11 +238,11 @@ export default function Dashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {mockSubmissions.slice(0, 3).map((submission) => (
+                                {submissions.filter(s => s.status === 'approved').slice(0, 3).map((submission) => (
                                     <div key={submission.id} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-dark-800/50 transition-colors rounded-lg border border-gray-100 dark:border-dark-800/50">
                                         <div className="flex-1">
-                                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{submission.taskTitle}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{submission.company}</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{submission.tasks?.title}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{submission.tasks?.company}</p>
                                         </div>
                                         {submission.status === 'approved' ? (
                                             <div className="text-right">

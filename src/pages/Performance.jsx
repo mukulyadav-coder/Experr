@@ -3,7 +3,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Target, TrendingUp, AlertTriangle, MessageSquare } from 'lucide-react';
-import { performanceData } from '../data/mockData';
 
 export default function Performance() {
     return (
@@ -63,7 +62,13 @@ export default function Performance() {
                         <CardContent>
                             <div className="h-80 w-full mt-4">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={performanceData}>
+                                    <LineChart data={[
+    { name: 'Week 1', score: 65 },
+    { name: 'Week 2', score: 68 },
+    { name: 'Week 3', score: 74 },
+    { name: 'Week 4', score: 79 },
+    { name: 'Week 5', score: 85 },
+]}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280' }} dy={10} />
                                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280' }} dx={-10} domain={[0, 100]} />

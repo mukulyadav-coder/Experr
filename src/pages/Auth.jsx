@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
+import { signUp, signIn } from '../../lib/supabase.js';
 
 export default function Auth() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('signup');
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -20,20 +22,26 @@ export default function Auth() {
         });
     };
 
-    const handleSignUp = (e) => {
+    const handleSignUp = async (e) => {
         e.preventDefault();
-        // TODO: Implement actual sign up logic
-        console.log('Sign up with:', formData);
-        // For now, just navigate to dashboard
-        navigate('/dashboard');
+        setError('');
+        const { data, error } = await signUp(formData.email, formData.password, formData.name);
+        if (error) {
+            setError(error.message);
+        } else {
+            navigate('/dashboard');
+        }
     };
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // TODO: Implement actual login logic
-        console.log('Login with:', { email: formData.email, password: formData.password });
-        // For now, just navigate to dashboard
-        navigate('/dashboard');
+        setError('');
+        const { data, error } = await signIn(formData.email, formData.password);
+        if (error) {
+            setError(error.message);
+        } else {
+            navigate('/dashboard');
+        }
     };
 
     const handleGoogleAuth = () => {
@@ -198,6 +206,12 @@ export default function Auth() {
                                 <span className="px-2 bg-white dark:bg-dark-800 text-gray-500 dark:text-gray-400">Or</span>
                             </div>
                         </div>
+
+                        {error && (
+                            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                {error}
+                            </div>
+                        )}
 
                         <Button
                             variant="ghost"

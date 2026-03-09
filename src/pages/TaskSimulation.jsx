@@ -1,25 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Play, Save, CheckCircle2, FileText, Send, AlertCircle } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { mockTasks } from '../data/mockData';
+import { supabase } from '../../lib/supabase';
 
 export default function TaskSimulation() {
     const { id } = useParams();
-    const task = mockTasks.find(t => t.id === id) || mockTasks[0];
-    const [code, setCode] = useState(task.starterCode);
+    const [task, setTask] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [code, setCode] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [activeTab, setActiveTab] = useState('description');
 
-    const handleSubmit = () => {
+    useEffect(() => {
+        console.log('TaskSimulation: useEffect triggered with id:', id);
+        const fetchTask = async () => {
+            try {
+                // Accept any non-empty ID
+                if (!id || typeof id !== 'string' || id.trim() === '') {
+                    console.log('TaskSimulation: Invalid task ID:', id);
+                    setError('Invalid task ID');
+                    setLoading(false);
+                    return;
+                }
+                console.log('TaskSimulation: Fetching task with id:', id);
+                const { data, error } = await supabase
+                    .from('tasks')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                if (error) {
+                    console.log('TaskSimulation: Supabase error:', error);
+                    setError('Task not found');
+                    setTask(null);
+                    setLoading(false);
+                    return;
+                }
+                if (!data) {
+                    console.log('TaskSimulation: No data returned');
+                    setError('Task not found');
+                    setTask(null);
+                    setLoading(false);
+                    return;
+                }
+                console.log('TaskSimulation: Task data received:', data);
+                setTask(data);
+                setCode(data.starterCode || '// Write your solution here\n');
+            } catch (err) {
+                console.error('TaskSimulation: Error fetching task:', err);
+                setError(err.message);
+            } finally {
+                console.log('TaskSimulation: Setting loading to false');
+                setLoading(false);
+            }
+        };
+        fetchTask();
+    }, [id]);
+
+    const handleSubmit = async () => {
         setSubmitting(true);
-        setTimeout(() => {
-            setSubmitting(false);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('submissions')
+                .insert({
+                    user_id: user.id,
+                    task_id: id,
+                    solution_code: code,
+                    status: 'pending',
+                    submitted_at: new Date().toISOString()
+                });
+            if (error) throw error;
             setSubmitted(true);
-        }, 1500);
+        } catch (err) {
+            console.error(err);
+            alert('Submission failed: ' + err.message);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const renderMarkdown = (text) => {
@@ -45,8 +109,27 @@ export default function TaskSimulation() {
         });
     };
 
+    console.log('TaskSimulation: Render - loading:', loading, 'error:', error, 'task:', task);
+
+    if (loading) {
+        console.log('TaskSimulation: Showing loading screen');
+        return <div className="flex justify-center items-center h-64">Loading task...</div>;
+    }
+
+    if (error) {
+        console.log('TaskSimulation: Showing error screen:', error);
+        return <div className="flex justify-center items-center h-64 text-red-500">Error: {error}</div>;
+    }
+
+    if (!task || !task.title || !task.description) {
+        console.log('TaskSimulation: Task data incomplete:', task);
+        return <div className="flex justify-center items-center h-64">Task data incomplete</div>;
+    }
+
+    console.log('TaskSimulation: Showing task content for:', task.title);
+
     return (
-        <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
+        <div className="flex h-[calc(100vh-8rem)] flex-col gap-4 bg-white dark:bg-dark-900">
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-dark-700">
                 <div className="flex items-center gap-4">
@@ -57,17 +140,17 @@ export default function TaskSimulation() {
                     </Link>
                     <div>
                         <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            {task.title}
-                            <Badge variant={task.difficulty === 'Hard' ? 'danger' : task.difficulty === 'Medium' ? 'warning' : 'success'}>
-                                {task.difficulty}
+                            {task?.title || 'Task Title'}
+                            <Badge variant={task?.difficulty === 'Hard' ? 'danger' : task?.difficulty === 'Medium' ? 'warning' : 'success'}>
+                                {task?.difficulty || 'Easy'}
                             </Badge>
                         </h1>
                         <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            <span>{task.role}</span>
+                            <span>{task?.role || 'Role'}</span>
                             <span>•</span>
-                            <span>{task.company}</span>
+                            <span>{task?.company || 'Company'}</span>
                             <span>•</span>
-                            <span>{task.estimatedTime}</span>
+                            <span>{task?.estimatedTime || 'Time'}</span>
                         </div>
                     </div>
                 </div>
@@ -131,7 +214,7 @@ export default function TaskSimulation() {
                     <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
                         {activeTab === 'description' ? (
                             <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
-                                {renderMarkdown(task.description)}
+                                {renderMarkdown(task?.description || 'Task description not available.')}
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -174,7 +257,7 @@ export default function TaskSimulation() {
                     </div>
                     <div className="flex-1 flex overflow-hidden relative">
                         {/* Line numbers */}
-                        <div className="w-12 bg-dark-950 border-r border-dark-800 flex flex-col text-right pr-4 py-4 text-black text-sm select-none overflow-y-auto">
+                        <div className="w-12 bg-dark-950 border-r border-dark-800 flex flex-col text-right pr-4 py-4 text-gray-400 text-sm select-none overflow-y-auto">
                             {code.split('\n').map((_, i) => (
                                 <div key={i} className="h-6 leading-6">{i + 1}</div>
                             ))}

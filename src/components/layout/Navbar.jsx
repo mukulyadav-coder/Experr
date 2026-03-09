@@ -1,9 +1,60 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Moon, Sun, Menu, Coins } from 'lucide-react';
-import { userProfile } from '../../data/mockData';
+import { supabase } from '../../../lib/supabase';
 import { Button } from '../ui/Button';
 
 export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
+    const [profile, setProfile] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data, error } = await supabase
+                        .from('profiles')
+                        .select('name, coins')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    if (error && error.code === 'PGRST116') {
+                        // Profile doesn't exist, create one
+                        const { error: insertError } = await supabase
+                            .from('profiles')
+                            .insert([{
+                                id: user.id,
+                                name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+                                coins: 0,
+                                avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`
+                            }]);
+                        
+                        if (!insertError) {
+                            // Fetch the newly created profile
+                            const { data: newProfile } = await supabase
+                                .from('profiles')
+                                .select('name, coins')
+                                .eq('id', user.id)
+                                .single();
+                            setProfile({ ...newProfile, avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}` });
+                        }
+                    } else if (!error) {
+                        setProfile({ ...data, avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}` });
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching/creating profile:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProfile();
+    }, []);
+
+    if (loading) {
+        return <div>Loading...</div>; // Or a skeleton
+    }
+
     return (
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8 dark:border-dark-700 dark:bg-dark-900 transition-colors">
             <button
@@ -38,7 +89,7 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
                     <div className="hidden lg:flex lg:items-center lg:gap-2 lg:px-3 lg:py-1.5 lg:rounded-full lg:bg-transparent lg:border-0 hover:lg:px-4 transition-all duration-300 group">
                         <span className="text-sm font-bold text-black hidden group-hover:inline transition-all duration-300">Experr</span>
                         <img src="/coin.svg" alt="coins" className="h-5 w-5" />
-                        <span className="text-sm font-semibold text-amber-500">{userProfile.totalCoinsEarned}</span>
+                        <span className="text-sm font-semibold text-amber-500">{profile?.coins || 0}</span>
                     </div>
 
                     {/* Separator */}
@@ -53,12 +104,12 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
                             <span className="sr-only">Open user menu</span>
                             <img
                                 className="h-8 w-8 rounded-full bg-gray-50 dark:bg-dark-800"
-                                src={userProfile.avatarUrl}
+                                src={profile?.avatarUrl}
                                 alt=""
                             />
                             <span className="hidden lg:flex lg:items-center">
                                 <span className="ml-4 text-sm font-semibold leading-6 text-gray-900 dark:text-white" aria-hidden="true">
-                                    {userProfile.name}
+                                    {profile?.name}
                                 </span>
                             </span>
                         </button>

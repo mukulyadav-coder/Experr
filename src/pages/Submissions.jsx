@@ -1,27 +1,60 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Search, CheckCircle2, AlertCircle, MessageSquare, RotateCw } from 'lucide-react';
-import { mockSubmissions } from '../data/mockData';
+import { supabase } from '../../lib/supabase';
 
 export default function Submissions() {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [expandedSubmission, setExpandedSubmission] = useState(null);
+    const [submissions, setSubmissions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [user, setUser] = useState(null);
 
-    const statuses = ['all', 'approved', 'rejected'];
+    useEffect(() => {
+        const fetchUserAndSubmissions = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) throw new Error('Not authenticated');
+                setUser(user);
+
+                const { data, error } = await supabase
+                    .from('submissions')
+                    .select(`
+                        *,
+                        tasks (
+                            title,
+                            company
+                        )
+                    `)
+                    .eq('user_id', user.id);
+                if (error) throw error;
+                setSubmissions(data || []);
+            } catch (err) {
+                console.error(err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUserAndSubmissions();
+    }, []);
+
+    const statuses = ['all', 'approved', 'rejected', 'pending'];
 
     const filteredSubmissions = useMemo(() => {
-        return mockSubmissions.filter(sub => {
-            const matchesSearch = sub.taskTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                sub.company.toLowerCase().includes(searchQuery.toLowerCase());
+        return submissions.filter(sub => {
+            const matchesSearch = sub.tasks?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                sub.tasks?.company?.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesStatus = statusFilter === 'all' || sub.status === statusFilter;
             return matchesSearch && matchesStatus;
         });
-    }, [searchQuery, statusFilter]);
+    }, [submissions, searchQuery, statusFilter]);
 
     const getStatusIcon = (status) => {
         switch (status) {
@@ -57,11 +90,19 @@ export default function Submissions() {
     };
 
     const stats = {
-        total: mockSubmissions.length,
-        approved: mockSubmissions.filter(s => s.status === 'approved').length,
-        rejected: mockSubmissions.filter(s => s.status === 'rejected').length,
-        totalCoins: mockSubmissions.filter(s => s.status === 'approved').reduce((sum, s) => sum + s.coins, 0),
+        total: submissions.length,
+        approved: submissions.filter(s => s.status === 'approved').length,
+        rejected: submissions.filter(s => s.status === 'rejected').length,
+        totalCoins: submissions.filter(s => s.status === 'approved').reduce((sum, s) => sum + s.coins, 0),
     };
+
+    if (loading) {
+        return <div className="flex justify-center items-center h-64">Loading submissions...</div>;
+    }
+
+    if (error) {
+        return <div className="flex justify-center items-center h-64 text-red-500">Error: {error}</div>;
+    }
 
     return (
         <div className="flex flex-col gap-8 pb-10">
@@ -159,11 +200,11 @@ export default function Submissions() {
                                             </div>
                                             <div className="flex-1">
                                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                                                    {submission.taskTitle}
+                                                    {submission.tasks?.title}
                                                 </h3>
                                                 <div className="flex flex-wrap gap-2 items-center mb-3">
                                                     <Badge variant="primary" className="text-xs">
-                                                        {submission.company}
+                                                        {submission.tasks?.company}
                                                     </Badge>
                                                     <Badge variant={getStatusBadgeVariant(submission.status)} className="text-xs">
                                                         {getStatusLabel(submission.status)}
