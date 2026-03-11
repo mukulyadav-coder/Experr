@@ -49,7 +49,7 @@ export default function TaskSimulation() {
                 }
                 console.log('TaskSimulation: Task data received:', data);
                 setTask(data);
-                setCode(data.starterCode || '// Write your solution here\n');
+                setCode(data.starterCode || '');
             } catch (err) {
                 console.error('TaskSimulation: Error fetching task:', err);
                 setError(err.message);
@@ -268,6 +268,7 @@ export default function TaskSimulation() {
                                 className="w-full h-full bg-transparent text-black focus:outline-none resize-none font-mono text-sm leading-6"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value)}
+                                placeholder="// Write your solution here"
                                 spellCheck="false"
                             />
                         </div>

@@ -1,10 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Target, TrendingUp, AlertTriangle, MessageSquare } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export default function Performance() {
+    const [performanceData, setPerformanceData] = useState(null);
+    const [historyData, setHistoryData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPerformanceData = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: perf } = await supabase
+                        .from('user_performance')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .single();
+                    
+                    if (perf) {
+                        setPerformanceData(perf);
+                    }
+
+                    const { data: hist } = await supabase
+                        .from('performance_history')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .order('week_start', { ascending: true })
+                        .limit(5);
+
+                    if (hist && hist.length > 0) {
+                        setHistoryData(hist.map((h, i) => ({
+                            name: `Week ${i + 1}`,
+                            score: h.score
+                        })));
+                    } else {
+                        setHistoryData([]); // No data available
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPerformanceData();
+    }, []);
+
+    const avgVelocity = performanceData?.average_velocity ?? 'N/A';
+    const taskAccuracy = performanceData?.task_accuracy != null ? `${performanceData.task_accuracy}%` : 'N/A';
+    const codeReviewsPassed = performanceData?.code_reviews_passed != null && performanceData?.total_reviews != null 
+        ? `${performanceData.code_reviews_passed}/${performanceData.total_reviews}` 
+        : 'N/A';
+
     return (
         <div className="flex flex-col gap-8 pb-10">
             <div>
@@ -21,7 +72,7 @@ export default function Performance() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Average Velocity</p>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">High</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{avgVelocity}</h3>
                         </div>
                     </CardContent>
                 </Card>
@@ -33,7 +84,7 @@ export default function Performance() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Task Accuracy</p>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">92%</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{taskAccuracy}</h3>
                         </div>
                     </CardContent>
                 </Card>
@@ -45,7 +96,7 @@ export default function Performance() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Code Reviews Passed</p>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">14/15</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{codeReviewsPassed}</h3>
                         </div>
                     </CardContent>
                 </Card>
@@ -61,24 +112,24 @@ export default function Performance() {
                         </CardHeader>
                         <CardContent>
                             <div className="h-80 w-full mt-4">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={[
-    { name: 'Week 1', score: 65 },
-    { name: 'Week 2', score: 68 },
-    { name: 'Week 3', score: 74 },
-    { name: 'Week 4', score: 79 },
-    { name: 'Week 5', score: 85 },
-]}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280' }} dy={10} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280' }} dx={-10} domain={[0, 100]} />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f3f4f6', borderRadius: '8px' }}
-                                            itemStyle={{ color: '#bae6fd' }}
-                                        />
-                                        <Line type="monotone" dataKey="score" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                                    </LineChart>
-                                </ResponsiveContainer>
+                                {historyData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={historyData}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280' }} dy={10} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280' }} dx={-10} domain={[0, 100]} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f3f4f6', borderRadius: '8px' }}
+                                                itemStyle={{ color: '#bae6fd' }}
+                                            />
+                                            <Line type="monotone" dataKey="score" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-gray-500">
+                                        No performance history data available.
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

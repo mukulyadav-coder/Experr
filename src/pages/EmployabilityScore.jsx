@@ -7,6 +7,29 @@ import { Badge } from '../components/ui/Badge';
 import { supabase } from '../../lib/supabase';
 
 export default function EmployabilityScore() {
+    const [score, setScore] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchScore = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data } = await supabase.from('profiles').select('employability_score').eq('id', user.id).single();
+                    setScore(data?.employability_score);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchScore();
+    }, []);
+
+    const displayScore = score ?? 'N/A';
+    const progressValue = typeof score === 'number' ? score : 0;
+
     return (
         <div className="flex flex-col gap-8 pb-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -36,13 +59,15 @@ export default function EmployabilityScore() {
                                     strokeWidth="8"
                                     className="text-experr-500 stroke-current"
                                     strokeDasharray="289"
-                                    strokeDashoffset={289 - (289 * 85) / 100}
+                                    strokeDashoffset={289 - (289 * progressValue) / 100}
                                     strokeLinecap="round"
                                 />
                             </svg>
                             <div className="flex flex-col items-center">
-                                <span className="text-5xl font-extrabold text-gray-900 dark:text-white">{85}</span>
-                                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">/ 100</span>
+                                <span className="text-5xl font-extrabold text-gray-900 dark:text-white">{displayScore}</span>
+                                {typeof score === 'number' && (
+                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">/ 100</span>
+                                )}
                             </div>
                         </div>
 

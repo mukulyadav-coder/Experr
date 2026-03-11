@@ -32,7 +32,7 @@ export default function Dashboard() {
                 // Fetch profile
                 const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
-                    .select('name, coins')
+                    .select('name, coins, employability_score')
                     .eq('id', user.id)
                     .single();
                 if (profileError) throw profileError;
@@ -73,7 +73,7 @@ export default function Dashboard() {
     }
 
     const stats = {
-        employabilityScore: 85, // Hardcoded for now
+        employabilityScore: profile?.employability_score ?? 'N/A',
         completedTasks: submissions.filter(s => s.status === 'approved').length,
         feedbackReceived: submissions.filter(s => s.status === 'approved').length, // Assuming feedback per approved
         totalCoins: submissions.filter(s => s.status === 'approved').reduce((sum, s) => sum + (s.coins || 0), 0),
