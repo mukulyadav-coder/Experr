@@ -7,13 +7,15 @@ import {
     FileText,
     BarChart2,
     Award,
-    Settings
+    Settings,
+    Trophy
 } from 'lucide-react';
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'My Tasks', href: '/tasks', icon: CheckSquare },
     { name: 'Submissions', href: '/submissions', icon: FileText },
+    { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
     { name: 'Performance', href: '/performance', icon: BarChart2 },
     { name: 'Employability Score', href: '/score', icon: Award },
 ];

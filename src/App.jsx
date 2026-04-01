@@ -14,6 +14,7 @@ import TaskSimulation from './pages/TaskSimulation';
 import Submissions from './pages/Submissions';
 import Performance from './pages/Performance';
 import Score from './pages/EmployabilityScore';
+import Leaderboard from './pages/Leaderboard';
 
 function App() {
     const [darkMode, setDarkMode] = useState(false);
@@ -43,6 +44,7 @@ function App() {
                     <Route path="/tasks" element={<Tasks />} />
                     <Route path="/tasks/:id" element={<TaskSimulation />} />
                     <Route path="/submissions" element={<Submissions />} />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/performance" element={<Performance />} />
                     <Route path="/score" element={<Score />} />
                 </Route>

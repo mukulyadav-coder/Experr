@@ -1,11 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, Moon, Sun, Menu, Coins } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Bell, Moon, Sun, Menu, Coins, User } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { Button } from '../ui/Button';
 
 export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef();
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -36,10 +48,10 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
                                 .select('name, coins')
                                 .eq('id', user.id)
                                 .single();
-                            setProfile({ ...newProfile, avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}` });
+                            setProfile({ ...newProfile, avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`, email: user.email, id: user.id });
                         }
                     } else if (!error) {
-                        setProfile({ ...data, avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}` });
+                        setProfile({ ...data, avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`, email: user.email, id: user.id });
                     }
                 }
             } catch (err) {
@@ -50,6 +62,12 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
         };
         fetchProfile();
     }, []);
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        setIsDropdownOpen(false);
+        // Optionally redirect to login page
+    };
 
     if (loading) {
         return <div>Loading...</div>; // Or a skeleton
@@ -100,6 +118,7 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
                         <button
                             type="button"
                             className="-m-1.5 flex items-center p-1.5 hover:bg-gray-50 rounded-md dark:hover:bg-dark-800 transition-colors"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         >
                             <span className="sr-only">Open user menu</span>
                             <img
@@ -113,6 +132,33 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
                                 </span>
                             </span>
                         </button>
+                        {isDropdownOpen && (
+                            <div ref={dropdownRef} className="absolute right-0 mt-2 w-80 bg-white dark:bg-dark-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 z-50 transition-all duration-200 border border-gray-200 dark:border-dark-700">
+                                <div className="p-6">
+                                    <div className="flex items-center">
+                                        <img className="h-12 w-12 rounded-full ring-2 ring-gray-200 dark:ring-dark-600" src={profile?.avatarUrl} alt="" />
+                                        <div className="ml-4">
+                                            <p className="text-base font-semibold text-gray-900 dark:text-white">{profile?.name}</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{profile?.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 space-y-2">
+                                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                            <Coins className="h-4 w-4 mr-2 text-amber-500" />
+                                            <span>Coins: <span className="font-semibold text-amber-600">{profile?.coins}</span></span>
+                                        </div>
+                                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                            <User className="h-4 w-4 mr-2 text-blue-500" />
+                                            <span>ID: <span className="font-mono text-xs">{profile?.id}</span></span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-6 flex space-x-3">
+                                        <Button variant="outline" size="sm" className="hover:bg-gray-50 dark:hover:bg-dark-700 hover:shadow-md transition-all duration-200" disabled>Edit Profile</Button>
+                                        <Button variant="outline" size="sm" className="hover:bg-red-50 dark:hover:bg-red-900 hover:shadow-md transition-all duration-200" onClick={handleLogout}>Logout</Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
