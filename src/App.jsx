@@ -14,6 +14,11 @@ import TaskSimulation from './pages/TaskSimulation';
 import Submissions from './pages/Submissions';
 import Performance from './pages/Performance';
 import Score from './pages/EmployabilityScore';
+import CampusSelection from './pages/CampusSelection';
+import CampusArena from './pages/CampusArena';
+import CompetitionDetails from './pages/CompetitionDetails';
+import RecruiterCandidates from './pages/RecruiterCandidates';
+import CandidateProfile from './pages/CandidateProfile';
 
 function App() {
     const [darkMode, setDarkMode] = useState(false);
@@ -40,11 +45,18 @@ function App() {
                 {/* App Routes */}
                 <Route element={<AppLayout toggleTheme={toggleTheme} isDark={darkMode} />}>
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/campus-selection" element={<CampusSelection />} />
+                    <Route path="/campus-arena" element={<CampusArena />} />
+                    <Route path="/competition/:id" element={<CompetitionDetails />} />
                     <Route path="/tasks" element={<Tasks />} />
                     <Route path="/tasks/:id" element={<TaskSimulation />} />
                     <Route path="/submissions" element={<Submissions />} />
                     <Route path="/performance" element={<Performance />} />
                     <Route path="/score" element={<Score />} />
+                    
+                    {/* Recruiter Portal Routes */}
+                    <Route path="/recruiter/candidates" element={<RecruiterCandidates />} />
+                    <Route path="/recruiter/candidate/:candidateId" element={<CandidateProfile />} />
                 </Route>
 
                 <Route path="*" element={<Navigate to="/" replace />} />

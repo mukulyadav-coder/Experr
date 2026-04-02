@@ -7,19 +7,28 @@ import {
     FileText,
     BarChart2,
     Award,
-    Settings
+    Settings,
+    Trophy,
+    Users
 } from 'lucide-react';
+import { useCampus } from '../../context/CampusContext';
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Campus Arena', href: '/campus-arena', icon: Trophy },
     { name: 'My Tasks', href: '/tasks', icon: CheckSquare },
     { name: 'Submissions', href: '/submissions', icon: FileText },
     { name: 'Performance', href: '/performance', icon: BarChart2 },
     { name: 'Employability Score', href: '/score', icon: Award },
 ];
 
+const recruiterNavigation = [
+    { name: 'Candidate Pipeline', href: '/recruiter/candidates', icon: Users },
+];
+
 export function Sidebar({ collapsed, setCollapsed }) {
     const location = useLocation();
+    const { selectedCollege } = useCampus();
 
     return (
         <div
@@ -41,6 +50,18 @@ export function Sidebar({ collapsed, setCollapsed }) {
                     </Link>
                 )}
             </div>
+
+            {/* College Display */}
+            {selectedCollege && !collapsed && (
+                <div className="px-4 py-3 bg-experr-50 dark:bg-experr-900/20 border-b border-gray-200 dark:border-dark-700">
+                    <div className="text-xs font-medium text-experr-700 dark:text-experr-300 uppercase tracking-wide">
+                        Campus
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white mt-1">
+                        {selectedCollege.name}
+                    </div>
+                </div>
+            )}
 
             <nav className="flex-1 space-y-1 overflow-y-auto p-4 scrollbar-thin">
                 {navigation.map((item) => {
@@ -72,6 +93,42 @@ export function Sidebar({ collapsed, setCollapsed }) {
                         </Link>
                     );
                 })}
+
+                {/* Recruiter Portal Section */}
+                {!collapsed && (
+                    <div className="pt-4 mt-4 border-t border-gray-200 dark:border-dark-700">
+                        <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                            Recruiter Portal
+                        </div>
+                        {recruiterNavigation.map((item) => {
+                            const isActive = location.pathname.startsWith(item.href);
+                            return (
+                                <Link
+                                    key={item.name}
+                                    to={item.href}
+                                    className={cn(
+                                        "group flex items-center rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                                        isActive
+                                            ? "bg-experr-50 text-experr-700 dark:bg-experr-900/40 dark:text-experr-400"
+                                            : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-800"
+                                    )}
+                                    title={collapsed ? item.name : undefined}
+                                >
+                                    <item.icon
+                                        className={cn(
+                                            "shrink-0 mr-3 h-5 w-5",
+                                            isActive
+                                                ? "text-experr-700 dark:text-experr-400"
+                                                : "text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"
+                                        )}
+                                        aria-hidden="true"
+                                    />
+                                    <span>{item.name}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                )}
             </nav>
 
             <div className="border-t border-gray-200 p-4 dark:border-dark-700">

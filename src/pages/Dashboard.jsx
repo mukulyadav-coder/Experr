@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Clock, CheckCircle2, AlertCircle, ArrowRight, MessageSquare, PlayCircle, Code, Briefcase } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useCampus } from '../context/CampusContext';
 
 export default function Dashboard() {
     const [profile, setProfile] = useState(null);
@@ -13,6 +14,12 @@ export default function Dashboard() {
     const [currentTask, setCurrentTask] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const location = useLocation();
+    const { selectedCollege } = useCampus();
+    
+    // Only show campus info when NOT on campus pages
+    const isCampusPage = location.pathname.includes('/campus');
+    const showCampusInfo = selectedCollege && !isCampusPage;
     // Fallback/fake data for missing variables
     const currentSimulation = currentTask ? {
         title: currentTask.title,
@@ -87,7 +94,9 @@ export default function Dashboard() {
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                         Welcome back, {profile?.name?.split(' ')[0]}
                     </h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">Here's a summary of your workspace today.</p>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">
+                        {showCampusInfo ? `Campus: ${selectedCollege.name}` : "Here's a summary of your workspace today."}
+                    </p>
                 </div>
                 <Link to={`/tasks/${currentTask?.id}`}>
                     <Button className="shrink-0 gap-2">

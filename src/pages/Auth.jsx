@@ -25,6 +25,7 @@ export default function Auth() {
     const handleSignUp = async (e) => {
         e.preventDefault();
         setError('');
+        
         const { data, error } = await signUp(formData.email, formData.password, formData.name);
         if (error) {
             setError(error.message);
