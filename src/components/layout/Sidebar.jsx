@@ -18,8 +18,10 @@ const navigation = [
     { name: 'Campus Arena', href: '/campus-arena', icon: Trophy },
     { name: 'My Tasks', href: '/tasks', icon: CheckSquare },
     { name: 'Submissions', href: '/submissions', icon: FileText },
+    { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
     { name: 'Performance', href: '/performance', icon: BarChart2 },
     { name: 'Employability Score', href: '/score', icon: Award },
+    { name: 'Mock Interviews', href: '/mock-interviews', icon: Users },
 ];
 
 const recruiterNavigation = [

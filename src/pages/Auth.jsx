@@ -4,11 +4,13 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
 import { signUp, signIn } from '../../lib/supabase.js';
+import RecruiterAuth from './RecruiterAuth';
 
 export default function Auth() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('signup');
     const [error, setError] = useState('');
+    const [showRecruiter, setShowRecruiter] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -58,7 +60,10 @@ export default function Auth() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-900 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
+            {showRecruiter ? (
+                <RecruiterAuth onBack={() => setShowRecruiter(false)} />
+            ) : (
+                <div className="max-w-md w-full space-y-8">
                 <div className="text-center">
                     <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">
                         Welcome to Experr
@@ -221,9 +226,18 @@ export default function Auth() {
                         >
                             Skip for now
                         </Button>
+
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowRecruiter(true)}
+                            className="w-full mt-2"
+                        >
+                            Login as Recruiter
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
+        )}
         </div>
     );
 }
