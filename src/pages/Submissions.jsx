@@ -342,8 +342,8 @@ export default function Submissions() {
                 <CardContent className="space-y-2 text-sm text-black">
                     <p>✓ Approved submissions = Coins earned based on quality</p>
                     <p>✗ Rejected submissions = No coins, but can resubmit</p>
-                    <p>🎯 High code quality = More coins rewarded</p>
-                    <p>📈 Build your coin balance and unlock achievements!</p>
+                    <p>🎯  High code quality = More coins rewarded</p>
+                    <p>📈  Build your coin balance and unlock achievements!</p>
                 </CardContent>
             </Card>
         </div>
