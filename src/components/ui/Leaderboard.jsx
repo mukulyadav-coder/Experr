@@ -27,7 +27,7 @@ const Leaderboard = ({ entries, currentUserName, showVerification = true }) => {
             <div>
               <p className="font-medium">{entry.name}</p>
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500">{entry.score} pts</span>
+                <span className="text-sm text-gray-500">0 pts</span>
                 {showVerification && entry.isVerified && (
                   <CheckCircle className="h-3 w-3 text-green-500" />
                 )}

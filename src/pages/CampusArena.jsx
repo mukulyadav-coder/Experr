@@ -42,11 +42,17 @@ const CampusArena = () => {
 
     // Load college-specific data
     const collegeComps = getCompetitionsByCollege(selectedCollege.id);
-    const collegeLeaderboard = getLeaderboardByCollege(selectedCollege.id);
+    const collegeLeaderboard = getLeaderboardByCollege(selectedCollege.id)
+      .slice(0, 10)
+      .map((entry, index) => ({
+        ...entry,
+        name: `Participator ${index + 1}`,
+        coins: 0,
+      }));
     const user = getCurrentUser();
 
     setCompetitions(collegeComps);
-    setLeaderboard(collegeLeaderboard.slice(0, 10)); // Top 10
+    setLeaderboard(collegeLeaderboard); // Top 10
     setCurrentUser(user);
   }, [selectedCollege, hasCollege, navigate]);
 
@@ -66,9 +72,9 @@ const CampusArena = () => {
   }
 
   const activeCompetitions = competitions.filter(comp => comp.status === 'active');
-  const totalParticipants = competitions.reduce((sum, comp) => sum + comp.participants, 0);
-  const userRank = leaderboard.findIndex(entry => entry.name === currentUser?.name) + 1;
-  const userCoins = currentUser?.coins || 0;
+  const totalParticipants = 0;
+  const userRank = 'N/A';
+  const userCoins = 0;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -244,9 +250,9 @@ const CampusArena = () => {
                           Due {new Date(comp.deadline).toLocaleDateString()}
                         </div>
                       </div>
-                      <ProgressBar value={65} className="mt-2" />
+                      <ProgressBar value={0.5} className="mt-2" />
                       <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>Progress: 65%</span>
+                        <span>Progress: 0%</span>
                         <span>2 days left</span>
                       </div>
                     </div>
