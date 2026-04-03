@@ -11,6 +11,7 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
     const [loading, setLoading] = useState(true);
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showCampusDropdown, setShowCampusDropdown] = useState(false); // ADD THIS
     const [notifications, setNotifications] = useState([]);
     const { selectedCollege, switchCollege } = useCampus();
     const navigate = useNavigate();
@@ -211,9 +212,15 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
 
                                 {/* Footer */}
                                 <div className="px-4 py-3 border-t border-gray-200 dark:border-dark-700 text-center">
-                                    <button className="text-sm text-experr-600 hover:text-experr-700 dark:text-experr-400 dark:hover:text-experr-300 font-medium">
-                                        View all notifications
-                                    </button>
+                                    <button
+    className="text-sm text-experr-600 hover:text-experr-700 dark:text-experr-400 dark:hover:text-experr-300 font-medium"
+    onClick={() => {
+        setShowNotifications(false);
+        navigate('/notifications');
+    }}
+>
+    View all notifications
+</button>
                                 </div>
                             </div>
                         )}
@@ -319,7 +326,7 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
                                         onClick={async () => {
                                             await supabase.auth.signOut();
                                             navigate('/');
-                                            setShowProfileDropdown(false);
+                                            setShowCampusDropdown(false);
                                         }}
                                     >
                                         Sign Out
