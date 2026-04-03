@@ -19,6 +19,10 @@ import CampusArena from './pages/CampusArena';
 import CompetitionDetails from './pages/CompetitionDetails';
 import RecruiterCandidates from './pages/RecruiterCandidates';
 import CandidateProfile from './pages/CandidateProfile';
+import MockInterviews from './pages/MockInterviews';
+import Leaderboard from './pages/Leaderboard';
+import ProfilePage from './pages/ProfilePage';
+import Settings from './pages/Settings';
 
 function App() {
     const [darkMode, setDarkMode] = useState(false);
@@ -51,8 +55,12 @@ function App() {
                     <Route path="/tasks" element={<Tasks />} />
                     <Route path="/tasks/:id" element={<TaskSimulation />} />
                     <Route path="/submissions" element={<Submissions />} />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/performance" element={<Performance />} />
                     <Route path="/score" element={<Score />} />
+                    <Route path="/mock-interviews" element={<MockInterviews />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/settings" element={<Settings />} />
                     
                     {/* Recruiter Portal Routes */}
                     <Route path="/recruiter/candidates" element={<RecruiterCandidates />} />
