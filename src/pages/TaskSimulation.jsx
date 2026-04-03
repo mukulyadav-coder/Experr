@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Play,
@@ -21,19 +21,26 @@ import { supabase } from "../../lib/supabase";
 
 export default function TaskSimulation() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [code, setCode] = useState("");
+  const [language, setLanguage] = useState("javascript");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     console.log("TaskSimulation: useEffect triggered with id:", id);
     const fetchTask = async () => {
       try {
-        // Accept any non-empty ID
         if (!id || typeof id !== "string" || id.trim() === "") {
           console.log("TaskSimulation: Invalid task ID:", id);
           setError("Invalid task ID");
@@ -74,7 +81,28 @@ export default function TaskSimulation() {
     fetchTask();
   }, [id]);
 
+  const handleSaveDraft = async () => {
+    try {
+      const draft = {
+        taskId: id,
+        code,
+        language,
+        timestamp: new Date().toISOString(),
+      };
+      localStorage.setItem(`draft_${id}`, JSON.stringify(draft));
+      // Optionally save to API
+      showToast("Draft saved successfully!");
+    } catch (err) {
+      console.error("Save draft error:", err);
+      showToast("Failed to save draft", "error");
+    }
+  };
+
   const handleSubmit = async () => {
+    if (!code.trim()) {
+      showToast("Please write some code before submitting", "error");
+      return;
+    }
     setSubmitting(true);
     try {
       const {
@@ -86,17 +114,23 @@ export default function TaskSimulation() {
         user_id: user.id,
         task_id: id,
         solution_code: code,
+        language,
         status: "pending",
         submitted_at: new Date().toISOString(),
       });
       if (error) throw error;
       setSubmitted(true);
+      showToast("Task submitted successfully!");
     } catch (err) {
       console.error(err);
-      alert("Submission failed: " + err.message);
+      showToast("Submission failed: " + err.message, "error");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleBack = () => {
+    navigate(-1);
   };
 
   const renderMarkdown = (text) => {
@@ -260,14 +294,25 @@ export default function TaskSimulation() {
   };
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4 bg-white dark:bg-dark-900">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'} text-white`}>
+          {toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-dark-700">
         <div className="flex items-center gap-4">
-          <Link to="/tasks">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleBack}
+            aria-label="Go back to tasks list"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <div>
             <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
               {task?.title || "Task Title"}
@@ -293,14 +338,32 @@ export default function TaskSimulation() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" className="gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="gap-2"
+            onClick={handleSaveDraft}
+            aria-label="Save current code as draft"
+          >
             <Save className="h-4 w-4" /> Save Draft
           </Button>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="px-3 py-2 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-experr-500 text-gray-900 dark:text-gray-100 text-sm"
+            aria-label="Select programming language"
+          >
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+          </select>
           <Button
             size="sm"
             className="gap-2"
-            onClick={submitTask}
+            onClick={handleSubmit}
             disabled={submitting || submitted}
+            aria-label="Submit your solution"
           >
             {submitting ? (
               <span className="flex items-center gap-2">
@@ -345,11 +408,13 @@ export default function TaskSimulation() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? "border-experr-500 text-experr-500"
-                    : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${activeTab === tab
+                  ? "border-experr-500 text-experr-500"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
                 }`}
+                aria-label={`Switch to ${tab} tab`}
+                role="tab"
+                aria-selected={activeTab === tab}
               >
                 {tab === "description" ? "Description" : "Resources"}
               </button>
@@ -357,7 +422,7 @@ export default function TaskSimulation() {
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto p-6 scrollbar-thin" role="tabpanel">
             {activeTab === "description" ? (
               <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
                 {renderMarkdown(
@@ -380,6 +445,7 @@ export default function TaskSimulation() {
                         key={i}
                         href={resource.url}
                         className="block p-3 text-sm font-medium text-experr-500 hover:text-experr-400 bg-gray-50 dark:bg-dark-700 rounded-lg border border-gray-200 dark:border-dark-700 hover:border-experr-500 transition-colors"
+                        aria-label={`Open ${resource.title}`}
                       >
                         {resource.title} →
                       </a>
@@ -395,12 +461,14 @@ export default function TaskSimulation() {
                     <Badge
                       variant="outline"
                       className="cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700"
+                      aria-label="Download auth.config.js"
                     >
                       auth.config.js
                     </Badge>
                     <Badge
                       variant="outline"
                       className="cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700"
+                      aria-label="Download package.json"
                     >
                       package.json
                     </Badge>
@@ -414,12 +482,12 @@ export default function TaskSimulation() {
         {/* Right Pane - Editor */}
         <div className="flex-[1.2] flex flex-col overflow-hidden bg-dark-950 rounded-lg border border-gray-200 dark:border-dark-700 shadow-sm font-mono">
           <div className="flex items-center justify-between px-4 py-3 bg-dark-900 border-b border-dark-800 text-sm text-gray-400 sticky top-0">
-            <span className="font-medium">solution.js</span>
-            <span className="text-xs">JavaScript</span>
+            <span className="font-medium">solution.{language === 'javascript' ? 'js' : language === 'python' ? 'py' : language === 'java' ? 'java' : 'cpp'}</span>
+            <span className="text-xs">{language}</span>
           </div>
           <div className="flex-1 flex overflow-hidden relative">
             {/* Line numbers */}
-            <div className="w-12 bg-dark-950 border-r border-dark-800 flex flex-col text-right pr-4 py-4 text-gray-400 text-sm select-none overflow-y-auto">
+            <div className="w-12 bg-dark-950 border-r border-dark-800 flex flex-col text-right pr-4 py-4 text-gray-400 text-sm select-none overflow-y-auto" aria-hidden="true">
               {code.split("\n").map((_, i) => (
                 <div key={i} className="h-6 leading-6">
                   {i + 1}
@@ -434,6 +502,7 @@ export default function TaskSimulation() {
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="// Write your solution here"
                 spellCheck="false"
+                aria-label="Code editor"
               />
             </div>
           </div>

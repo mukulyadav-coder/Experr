@@ -35,7 +35,7 @@ export function AppLayout({ toggleTheme, isDark }) {
 
     if (loading) {
         return <div className="flex justify-center items-center h-screen">Loading...</div>;
-    }
+     }
 
     if (!user) {
         return null; // Will redirect to auth
