@@ -91,7 +91,7 @@ export default function Landing() {
                                     <Database className="h-6 w-6" />
                                 </div>
                                 <CardTitle className="text-xl">Backend Engineer</CardTitle>
-                                <CardDescription>APIs, Database Design, Caching, Authentication, Scalability patterns.</CardDescription>
+                                <CardDescription>APIs, Database Desig, Caching, Authentication, Scalability patterns.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex gap-2 mt-2">
