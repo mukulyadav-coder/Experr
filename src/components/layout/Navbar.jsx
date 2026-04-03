@@ -9,7 +9,7 @@ import { colleges } from '../../data/campusArenaData';
 export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [showCampusDropdown, setShowCampusDropdown] = useState(false);
+    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const { selectedCollege, switchCollege } = useCampus();
@@ -274,6 +274,8 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
                         <button
                             type="button"
                             className="-m-1.5 flex items-center p-1.5 hover:bg-gray-50 rounded-md dark:hover:bg-dark-800 transition-colors"
+                            onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                            aria-label="Open user menu"
                         >
                             <span className="sr-only">Open user menu</span>
                             <img
@@ -285,8 +287,46 @@ export function Navbar({ toggleSidebar, toggleTheme, isDark }) {
                                 <span className="ml-4 text-sm font-semibold leading-6 text-gray-900 dark:text-white" aria-hidden="true">
                                     {profile?.name}
                                 </span>
+                                <ChevronDown className="ml-2 h-4 w-4 text-gray-400" />
                             </span>
                         </button>
+
+                        {/* Profile Dropdown */}
+                        {showProfileDropdown && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-dark-800 rounded-md shadow-lg border border-gray-200 dark:border-dark-600 z-50">
+                                <div className="py-1">
+                                    <button
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-700 transition-colors"
+                                        onClick={() => {
+                                            navigate('/profile');
+                                            setShowProfileDropdown(false);
+                                        }}
+                                    >
+                                        View Profile
+                                    </button>
+                                    <button
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-700 transition-colors"
+                                        onClick={() => {
+                                            navigate('/settings');
+                                            setShowProfileDropdown(false);
+                                        }}
+                                    >
+                                        Settings
+                                    </button>
+                                    <div className="border-t border-gray-200 dark:border-dark-700 my-1" />
+                                    <button
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-700 transition-colors"
+                                        onClick={async () => {
+                                            await supabase.auth.signOut();
+                                            navigate('/');
+                                            setShowProfileDropdown(false);
+                                        }}
+                                    >
+                                        Sign Out
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
